@@ -16,6 +16,7 @@ import {
 import { RegisterDto } from '../auth/auth.dto.js';
 import { AuthService } from '../auth/auth.service.js';
 import { DriverRegistrationService } from './driver-registration.service.js';
+import { TripRequestsService } from '../../supabase/trip-requests.service.js';
 
 @Controller('api/conductores')
 export class ConductoresController {
@@ -23,6 +24,7 @@ export class ConductoresController {
     private readonly service: ConductoresService,
     private readonly authService: AuthService,
     private readonly registrationService: DriverRegistrationService,
+    private readonly tripRequests: TripRequestsService,
   ) {}
   @Get()
   async findAll(@Headers('authorization') authorization: string | undefined) {
@@ -58,16 +60,27 @@ export class ConductoresController {
   }
   @Get('solicitudes')
   async pendingRequests(@Headers('authorization') authorization: string | undefined) {
-    const driver = await this.authService.requireConductor(authorization);
-    return { data: await this.registrationService.pendingTripRequests(String(driver.celular)) };
+    await this.authService.requireConductor(authorization);
+    return { data: await this.tripRequests.pending() };
   }
   @Post('solicitudes/:id/aceptar')
   async acceptRequest(@Headers('authorization') authorization: string | undefined, @Param('id', ParseIntPipe) id: number) {
     const driver = await this.authService.requireConductor(authorization);
-    return this.registrationService.acceptTripRequest(id, String(driver.celular));
+    const profile = await this.registrationService.findProfileByCellphone(String(driver.celular));
+    if (!profile) throw new NotFoundException('No existe un perfil de conductor para este usuario.');
+    return this.tripRequests.accept(id, Number(profile.id), profile);
   }
+  @Post('solicitudes/:id/estado')
+  async updateTripStatus(@Headers('authorization') authorization: string | undefined, @Param('id', ParseIntPipe) id: number, @Body() body: { estado?: string }) {
+    const driver = await this.authService.requireConductor(authorization);
+    const profile = await this.registrationService.findProfileByCellphone(String(driver.celular));
+    if (!profile) throw new NotFoundException('No existe un perfil de conductor para este usuario.');
+    return this.tripRequests.setStatus(id, Number(profile.id), String(body.estado ?? ''));
+  }
+  @Get('solicitudes/:id/estado')
+  tripStatus(@Param('id', ParseIntPipe) id: number) { return this.tripRequests.find(id); }
   @Post('solicitudes')
-  createRequest(@Body() body: any) { return this.registrationService.createTripRequest(body); }
+  createRequest(@Body() body: any) { return this.tripRequests.create(body); }
   @Get(':id')
   async findOne(@Headers('authorization') authorization: string | undefined, @Param('id', ParseIntPipe) id: number) {
     await this.authService.requireAdministrator(authorization);
