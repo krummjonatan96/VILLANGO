@@ -81,6 +81,8 @@ export class ConductoresController {
   tripStatus(@Param('id', ParseIntPipe) id: number) { return this.tripRequests.find(id); }
   @Post('solicitudes')
   createRequest(@Body() body: any) { return this.tripRequests.create(body); }
+  @Delete('solicitudes/:id')
+  cancelRequest(@Param('id', ParseIntPipe) id: number) { return this.tripRequests.cancel(id); }
   @Get(':id')
   async findOne(@Headers('authorization') authorization: string | undefined, @Param('id', ParseIntPipe) id: number) {
     await this.authService.requireAdministrator(authorization);

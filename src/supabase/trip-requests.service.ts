@@ -62,6 +62,20 @@ export class TripRequestsService {
     return data;
   }
 
+  /** El pasajero puede retirar una solicitud que todavía no fue aceptada. */
+  async cancel(id: number) {
+    const { data, error } = await this.supabase.getClient()
+      .from(TripRequestsService.table)
+      .update({ estado: 'cancelado', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('estado', 'pendiente')
+      .select()
+      .maybeSingle();
+    if (error) throw new BadGatewayException(`No se pudo cancelar la solicitud: ${error.message}`);
+    if (!data) throw new ConflictException('La solicitud ya fue aceptada o no está disponible.');
+    return data;
+  }
+
   /** La condición estado=pendiente evita que dos choferes acepten el mismo viaje. */
   async accept(id: number, conductorId: number, profile: Record<string, any> = {}) {
     const { data, error } = await this.supabase.getClient()
