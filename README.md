@@ -59,7 +59,25 @@ $ npm run test:cov
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+For a Node.js deployment, configure the hosting panel with these commands:
+
+```bash
+npm ci
+npm run build
+npm run start:prod
+```
+
+The application listens on `0.0.0.0` and uses the `PORT` value supplied by the hosting provider. Configure these environment variables in the hosting panel before starting the application:
+
+```text
+DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_JWKS_URL
+SUPABASE_REALTIME_TABLES
+WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_BUSINESS_ACCOUNT_ID
+PORT
+```
+
+Do not upload `.env` to Git or copy production secrets into `.env.example`. Use `.env.example` only as the template for the hosting environment. Check out the [NestJS deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
 If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
