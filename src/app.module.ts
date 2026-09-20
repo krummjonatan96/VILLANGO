@@ -7,6 +7,9 @@ import { DatabaseService } from './core/database.service.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthRepository } from './modules/auth/auth.repository.js';
+import { WhatsAppService } from './modules/auth/whatsapp.service.js';
+import { WhatsAppOtpRepository } from './modules/auth/whatsapp-otp.repository.js';
+import { WhatsAppOtpService } from './modules/auth/whatsapp-otp.service.js';
 import { UserController } from './modules/users/user.controller.js';
 import { UserRepository } from './modules/users/user.repository.js';
 import { UserService } from './modules/users/user.service.js';
@@ -79,6 +82,9 @@ import {
     DatabaseService,
     AuthService,
     AuthRepository,
+    WhatsAppService,
+    WhatsAppOtpRepository,
+    WhatsAppOtpService,
     UserRepository,
     UserService,
     LocationRepository,

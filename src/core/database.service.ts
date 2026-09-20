@@ -42,6 +42,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     try {
       await this.ensureAuthTables();
+      await this.ensureWhatsAppOtpTables();
       await this.ensureDriverUserTables();
       await this.ensureDriverProfileSchema();
       await this.ensureTripDispatchSchema();
@@ -134,6 +135,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_api_tokens_chofer_usuario
           FOREIGN KEY (chofer_id) REFERENCES usuario_chofer(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+  }
+
+  private async ensureWhatsAppOtpTables() {
+    await this.pool?.execute(`
+      CREATE TABLE IF NOT EXISTS whatsapp_otps (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        phone VARCHAR(20) NOT NULL,
+        otp_hash VARCHAR(255) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        verified_at DATETIME NULL,
+        invalidated_at DATETIME NULL,
+        sent_at DATETIME NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX ix_whatsapp_otps_phone_created (phone, created_at),
+        INDEX ix_whatsapp_otps_phone_active (phone, verified_at, invalidated_at, expires_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
   }

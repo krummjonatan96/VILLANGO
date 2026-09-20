@@ -15,6 +15,8 @@ export class AppController {
         'POST /api/conductores/registro (registro de conductor)',
         'POST /api/auth/register',
         'POST /api/auth/login',
+        'POST /api/auth/whatsapp-otp/request',
+        'POST /api/auth/whatsapp-otp/verify',
         'POST /api/auth/logout',
         'GET /api/auth/me',
         'CRUD /api/conductores',
