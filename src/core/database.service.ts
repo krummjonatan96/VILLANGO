@@ -14,6 +14,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
   private readonly pool: Pool | null;
   private connected = false;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private connecting = false;
 
   constructor(private readonly configService: ConfigService) {
     const host = this.configService.get<string>('DB_HOST');
@@ -40,6 +42,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    await this.connect();
+  }
+
+  async onModuleDestroy() {
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    await this.pool?.end();
+  }
+
+  private async connect() {
+    if (!this.pool || this.connecting || this.connected) return;
+    this.connecting = true;
     try {
       await this.ensureAuthTables();
       await this.ensureWhatsAppOtpTables();
@@ -50,12 +63,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       this.connected = true;
       this.logger.log('MySQL conectado correctamente.');
     } catch (error) {
-      this.logger.error('No se pudo conectar a MySQL.', error);
+      this.connected = false;
+      const message = error instanceof Error ? error.message : 'Error de conexión desconocido';
+      this.logger.error(`No se pudo conectar a MySQL: ${message}. Reintentando en 30 segundos.`);
+      this.scheduleReconnect();
+    } finally {
+      this.connecting = false;
     }
   }
 
-  async onModuleDestroy() {
-    await this.pool?.end();
+  private scheduleReconnect() {
+    if (this.reconnectTimer) return;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      void this.connect();
+    }, 30_000);
   }
 
   private async ensureAuthTables() {
